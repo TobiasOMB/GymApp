@@ -13,6 +13,8 @@ jobs:
         run: curl -L -o www/exercises.json https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json
       - run: npm install
       - run: npx cap add android && npx cap sync android
+      - name: App-Icon erzeugen
+        run: npx @capacitor/assets generate --android
       - name: Berechtigungen fuer Erinnerung
         run: sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Feste Signatur (damit Updates ueber die alte App moeglich sind)
