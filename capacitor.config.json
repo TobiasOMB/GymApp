@@ -1,1 +1,16 @@
-{"appId":"de.arise.gym","appName":"ARISE GYM","webDir":"www","backgroundColor":"#04050b"}
+{
+ "appId": "de.arise.gym",
+ "appName": "ARISE GYM",
+ "webDir": "www",
+ "backgroundColor": "#04050b",
+ "plugins": {
+  "BluetoothLe": {
+   "displayStrings": {
+    "scanning": "Suche Pulsuhr …",
+    "cancel": "Abbrechen",
+    "availableDevices": "Verfügbare Geräte",
+    "noDeviceFound": "Keine Uhr gefunden"
+   }
+  }
+ }
+}
