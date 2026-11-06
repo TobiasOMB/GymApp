@@ -15,6 +15,10 @@ jobs:
       - run: npx cap add android && npx cap sync android
       - name: App-Icon erzeugen
         run: npx @capacitor/assets generate --android
+      - name: Bluetooth-Berechtigungen
+        run: |
+          sed -i '0,/<manifest /s#<manifest #<manifest xmlns:tools="http://schemas.android.com/tools" #' android/app/src/main/AndroidManifest.xml
+          sed -i 's#</manifest>#<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" tools:targetApi="s"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Berechtigungen fuer Erinnerung
         run: sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Feste Signatur (damit Updates ueber die alte App moeglich sind)
