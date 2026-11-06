@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Awakening Gym APK
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -13,6 +13,8 @@ jobs:
         run: curl -L -o www/exercises.json https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json
       - run: npm install
       - run: npx cap add android && npx cap sync android
+      - name: App-Name setzen
+        run: sed -i 's#<string name="app_name">.*</string>#<string name="app_name">Awakening Gym</string>#; s#<string name="title_activity_main">.*</string>#<string name="title_activity_main">Awakening Gym</string>#' android/app/src/main/res/values/strings.xml
       - name: App-Icon erzeugen
         run: npx @capacitor/assets generate --android
       - name: Bluetooth-Berechtigungen
@@ -23,6 +25,13 @@ jobs:
         run: sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Feste Signatur (damit Updates ueber die alte App moeglich sind)
         run: mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
+      - name: Versionsnummer setzen
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/; s/versionName \".*\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - run: mv android/app/build/outputs/apk/debug/app-debug.apk android/Awakening-Gym-${{ github.run_number }}.apk
       - uses: actions/upload-artifact@v4
-        with: {name: arise-gym-apk, path: android/app/build/outputs/apk/debug/app-debug.apk}
+        with:
+          name: awakening-gym-apk-${{ github.run_number }}
+          path: android/Awakening-Gym-${{ github.run_number }}.apk
