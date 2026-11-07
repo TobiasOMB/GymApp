@@ -15,8 +15,23 @@ jobs:
       - run: npx cap add android && npx cap sync android
       - name: App-Name setzen
         run: sed -i 's#<string name="app_name">.*</string>#<string name="app_name">Awakening Gym</string>#; s#<string name="title_activity_main">.*</string>#<string name="title_activity_main">Awakening Gym</string>#' android/app/src/main/res/values/strings.xml
+      - name: Icon-Ebenen aus assets/icon-only.png erzeugen
+        run: |
+          python3 -c "import PIL" 2>/dev/null || python3 -m pip install --break-system-packages pillow
+          python3 - <<'EOF'
+          from PIL import Image
+          src = Image.open("assets/icon-only.png").convert("RGB")
+          src.resize((1024, 1024), Image.LANCZOS).save("assets/icon-only.png")
+          Image.new("RGB", (1024, 1024), (0, 0, 0)).save("assets/icon-background.png")
+          fg = Image.new("RGBA", (1024, 1024), (0, 0, 0, 255))
+          fg.paste(src.resize((720, 720), Image.LANCZOS), (152, 152))
+          fg.save("assets/icon-foreground.png")
+          print("Icon-Ebenen erzeugt")
+          EOF
       - name: App-Icon erzeugen
-        run: npx @capacitor/assets generate --android
+        run: |
+          npx @capacitor/assets generate --android
+          ls -la android/app/src/main/res/mipmap-xxxhdpi/
       - name: Schrittzaehler-Plugin einbauen
         run: |
           cat > android/app/src/main/java/de/arise/gym/StepsPlugin.java <<'EOF2'
