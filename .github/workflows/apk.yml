@@ -15,17 +15,38 @@ jobs:
       - run: npx cap add android && npx cap sync android
       - name: App-Name setzen
         run: sed -i 's#<string name="app_name">.*</string>#<string name="app_name">Awakening Gym</string>#; s#<string name="title_activity_main">.*</string>#<string name="title_activity_main">Awakening Gym</string>#' android/app/src/main/res/values/strings.xml
-      - name: Icon-Ebenen aus assets/icon-only.png erzeugen
+      - name: Icon mit Leuchtrand aus assets/icon-only.png erzeugen
         run: |
           python3 -c "import PIL" 2>/dev/null || python3 -m pip install --break-system-packages pillow
           python3 - <<'EOF'
-          from PIL import Image
-          src = Image.open("assets/icon-only.png").convert("RGB")
-          src.resize((1024, 1024), Image.LANCZOS).save("assets/icon-only.png")
-          Image.new("RGB", (1024, 1024), (0, 0, 0)).save("assets/icon-background.png")
-          fg = Image.new("RGBA", (1024, 1024), (0, 0, 0, 255))
-          fg.paste(src.resize((720, 720), Image.LANCZOS), (152, 152))
-          fg.save("assets/icon-foreground.png")
+          from PIL import Image, ImageDraw, ImageFilter, ImageChops
+          N = 1024
+          C = N // 2
+          R = 312
+          art = Image.open("assets/icon-only.png").convert("RGB").resize((N, N), Image.LANCZOS)
+
+          def disc(r, ss=4):
+              m = Image.new("L", (N * ss, N * ss), 0)
+              ImageDraw.Draw(m).ellipse([(C - r) * ss, (C - r) * ss, (C + r) * ss, (C + r) * ss], fill=255)
+              return m.resize((N, N), Image.LANCZOS)
+
+          grad_row = Image.new("RGB", (N, 1))
+          for x in range(N):
+              t = x / (N - 1)
+              a, b = (47, 107, 255), (255, 45, 111)
+              grad_row.putpixel((x, 0), tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3)))
+          grad = grad_row.resize((N, N))
+
+          can = Image.new("RGB", (N, N), (0, 0, 0))
+          can.paste(art.resize((2 * (R - 8), 2 * (R - 8)), Image.LANCZOS), (C - (R - 8), C - (R - 8)))
+          base = Image.composite(can, Image.new("RGB", (N, N), (0, 0, 0)), disc(R - 8))
+          ring = ImageChops.subtract(disc(R + 6), disc(R - 6))
+          glow = ring.filter(ImageFilter.GaussianBlur(16)).point(lambda v: min(255, int(v * 2.4)))
+          base = Image.composite(grad, base, glow)
+          base = Image.composite(grad, base, ring)
+          base.save("assets/icon-only.png")
+          base.convert("RGBA").save("assets/icon-foreground.png")
+          Image.new("RGB", (N, N), (0, 0, 0)).save("assets/icon-background.png")
           print("Icon-Ebenen erzeugt")
           EOF
       - name: App-Icon erzeugen
