@@ -17,12 +17,29 @@ jobs:
         run: sed -i 's#<string name="app_name">.*</string>#<string name="app_name">Awakening Gym</string>#; s#<string name="title_activity_main">.*</string>#<string name="title_activity_main">Awakening Gym</string>#' android/app/src/main/res/values/strings.xml
       - name: App-Icon erzeugen
         run: npx @capacitor/assets generate --android
+      - name: Schrittzaehler-Plugin einbauen
+        run: |
+          cp native/StepsPlugin.java android/app/src/main/java/de/arise/gym/StepsPlugin.java
+          cat > android/app/src/main/java/de/arise/gym/MainActivity.java <<'EOF'
+          package de.arise.gym;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(StepsPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }
+          }
+          EOF
       - name: Bluetooth-Berechtigungen
         run: |
           sed -i '0,/<manifest /s#<manifest #<manifest xmlns:tools="http://schemas.android.com/tools" #' android/app/src/main/AndroidManifest.xml
           sed -i 's#</manifest>#<uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" tools:targetApi="s"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Berechtigungen fuer Erinnerung
-        run: sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/></manifest>#' android/app/src/main/AndroidManifest.xml
+        run: sed -i 's#</manifest>#<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/><uses-permission android:name="android.permission.USE_EXACT_ALARM"/><uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/></manifest>#' android/app/src/main/AndroidManifest.xml
       - name: Feste Signatur (damit Updates ueber die alte App moeglich sind)
         run: mkdir -p ~/.android && cp debug.keystore ~/.android/debug.keystore
       - name: Versionsnummer setzen
